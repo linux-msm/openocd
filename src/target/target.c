@@ -24,6 +24,9 @@
  *                                                                         *
  *   Copyright (C) 2011 Andreas Fritiofson                                 *
  *   andreas.fritiofson@gmail.com                                          *
+ *                                                                         *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   *
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -61,6 +64,8 @@ static int target_get_gdb_fileio_info_default(struct target *target,
 		struct gdb_fileio_info *fileio_info);
 static int target_gdb_fileio_end_default(struct target *target, int retcode,
 		int fileio_errno, bool ctrl_c);
+int target_profiling_default(struct target *target, uint32_t *samples,
+		uint32_t max_num_samples, uint32_t *num_samples, uint32_t seconds);
 
 static struct target_type *target_types[] = {
 	&arm7tdmi_target,
@@ -101,6 +106,7 @@ static struct target_type *target_types[] = {
 	&aarch64_target,
 	&armv8r_target,
 	&mips_mips64_target,
+	&hexagon_target,
 	NULL,
 };
 

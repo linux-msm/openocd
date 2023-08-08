@@ -3,6 +3,9 @@
 /***************************************************************************
  *   Copyright (C) 2015 by David Ung                                       *
  *                                                                         *
+ *                                                                         *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   *
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -23,6 +26,7 @@
 #include "smp.h"
 #include <helper/nvp.h>
 #include <helper/time_support.h>
+#include "aarch64_system_registers.h"
 
 enum restart_mode {
 	RESTART_LAZY,
@@ -2022,9 +2026,30 @@ static int aarch64_assert_reset(struct target *target)
 
 static int aarch64_deassert_reset(struct target *target)
 {
+    struct armv8_common *armv8 = target_to_armv8(target);
 	int retval;
-
+	// set reset catch enable bit in EDECR
+	uint32_t reset_catch = 0x02;
+	
 	LOG_DEBUG(" ");
+
+    uint32_t val1;
+    /* set reset-catch enabled(RCE 1st bit) in external debug execution control register (EDECR) */
+    retval = mem_ap_write_atomic_u32(armv8->debug_ap,
+                                     armv8->debug_base + CPUV8_DBG_EDECR, reset_catch);
+    if (retval != ERROR_OK)
+        LOG_ERROR("Failed to enable reset-catch on target %s, "
+                  "reset halt will not work.",
+                  target_name(target));
+
+    retval = mem_ap_read_atomic_u32(armv8->debug_ap,
+                                    armv8->debug_base + CPUV8_DBG_EDECR, &val1);
+    if (retval != ERROR_OK)
+    {
+        LOG_DEBUG("read EDECR failed");
+        return retval;
+    }
+    LOG_INFO("read EDECR after writing: %u", val1);
 
 	/* be certain SRST is off */
 	adapter_deassert_reset();
@@ -2032,41 +2057,53 @@ static int aarch64_deassert_reset(struct target *target)
 	if (!target_was_examined(target))
 		return ERROR_OK;
 
-	retval = aarch64_init_debug_access(target);
-	if (retval != ERROR_OK)
-		return retval;
+    /* init debug access before polling target status, to clear OSLock */
+    retval = aarch64_init_debug_access(target);
+    if (retval != ERROR_OK)
+        return retval;
+
+    if (target->reset_halt)
+    {
+        uint32_t val;
+
+
+        /* check if a reset-catch event is pending */
+        retval = mem_ap_read_atomic_u32(armv8->debug_ap,
+                                        armv8->debug_base + CPUV8_DBG_EDESR, &val);
+        if (retval != ERROR_OK)
+        {
+            LOG_DEBUG("read EDESR failed");
+            return retval;
+        }
+        if (val & reset_catch)
+        {
+            LOG_DEBUG("reset-catch event pending");
+            retval = mem_ap_write_atomic_u32(armv8->debug_ap,
+                                             armv8->debug_base + CPUV8_DBG_EDESR, reset_catch);
+            if (retval != ERROR_OK)
+                LOG_DEBUG("clearing reset-catch event failed");
+            /* set reset-catch disabled */
+            retval = mem_ap_write_atomic_u32(armv8->debug_ap,
+                                             armv8->debug_base + CPUV8_DBG_EDECR, 0);
+            if (retval != ERROR_OK)
+                LOG_DEBUG("disabling reset-catch failed");
+        }
+    }
 
 	retval = aarch64_poll(target);
 	if (retval != ERROR_OK)
 		return retval;
 
+
 	if (target->reset_halt) {
-		/* clear pending Reset Catch debug event */
-		retval = aarch64_clear_reset_catch(target);
-		if (retval != ERROR_OK)
-			LOG_WARNING("%s: Clearing Reset Catch debug event failed",
-					target_name(target));
-
-		/* disable Reset Catch debug event */
-		retval = aarch64_enable_reset_catch(target, false);
-		if (retval != ERROR_OK)
-			LOG_WARNING("%s: Disabling Reset Catch debug event failed",
-					target_name(target));
-
 		if (target->state != TARGET_HALTED) {
 			LOG_WARNING("%s: ran after reset and before halt ...",
 				target_name(target));
-			if (target_was_examined(target)) {
-				retval = aarch64_halt_one(target, HALT_LAZY);
-				if (retval != ERROR_OK)
-					return retval;
-			} else {
-				target->state = TARGET_UNKNOWN;
-			}
+			retval = target_halt(target);
 		}
 	}
 
-	return ERROR_OK;
+	return retval;
 }
 
 static int aarch64_write_cpu_memory_slow(struct target *target,
@@ -3213,6 +3250,11 @@ static const struct command_registration aarch64_exec_command_handlers[] = {
 		.handler = aarch64_mcrmrc_command,
 		.help = "read coprocessor register",
 		.usage = "cpnum op1 CRn CRm op2",
+	},
+	{
+		//QCOM Added 
+		//Added new openocd commands for reading/writing into coprocessor registers
+		.chain = coproc_command_handlers,
 	},
 	{
 		.chain = smp_command_handlers,

@@ -15,6 +15,9 @@
  *   zw@superlucidity.net                                                  *
  *                                                                         *
  *   Copyright (C) 2020, Ampere Computing LLC                              *
+ *                                                                         *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   * 
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -41,6 +44,9 @@ struct adapter_driver *adapter_drivers[] = {
 #endif
 #if BUILD_DUMMY == 1
 		&dummy_adapter_driver,
+#endif
+#if BUILD_EUD == 1
+		&eud_adapter_driver,
 #endif
 #if BUILD_FTDI == 1
 		&ftdi_adapter_driver,

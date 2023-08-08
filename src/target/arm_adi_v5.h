@@ -8,6 +8,9 @@
  *   spen@spen-soft.co.uk                                                  *
  *                                                                         *
  *   Copyright (C) 2019-2021, Ampere Computing LLC                         *
+ *                                                                         *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   *
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_ARM_ADI_V5_H
@@ -598,6 +601,10 @@ static inline int dap_queue_ap_read(struct adiv5_ap *ap,
 	return ap->dap->ops->queue_ap_read(ap, reg, data);
 }
 
+/* Probe the AP for ROM Table location */
+int dap_get_debugbase(struct adiv5_ap *ap,
+			target_addr_t *dbgbase, uint32_t *apid);
+
 /**
  * Queue an AP register write.
  *
@@ -699,6 +706,9 @@ static inline int dap_dp_poll_register(struct adiv5_dap *dap, unsigned int reg,
 		return ERROR_OK;
 	}
 }
+
+int enable_dbg_sys_pwr(struct adiv5_dap *dap);
+
 
 /* Queued MEM-AP memory mapped single word transfers. */
 int mem_ap_read_u32(struct adiv5_ap *ap,

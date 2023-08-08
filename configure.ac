@@ -22,6 +22,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_LANG([C])
 AC_PROG_CC
+AC_PROG_CXX
 # autoconf 2.70 obsoletes AC_PROG_CC_C99 and includes it in AC_PROG_CC
 m4_version_prereq([2.70],[],[AC_PROG_CC_C99])
 AM_PROG_CC_C_O
@@ -170,6 +171,9 @@ m4_define([LIBJAYLINK_ADAPTERS],
 m4_define([PCIE_ADAPTERS],
 	[[[xlnx_pcie_xvc], [Xilinx XVC/PCIe], [XLNX_PCIE_XVC]]])
 
+m4_define([QCOM_ADAPTERS],
+	[[[eud], [Embedded USB Debugger], [EUD]]])
+	
 m4_define([SERIAL_PORT_ADAPTERS],
 	[[[buspirate], [Bus Pirate], [BUS_PIRATE]]])
 
@@ -282,6 +286,10 @@ AS_IF([test "x$debug_malloc" = "xyes" -a "x$have_glibc" = "xyes"], [
   AC_DEFINE([_DEBUG_FREE_SPACE_],[1], [Include malloc free space in logging])
 ])
 
+AC_ARG_ENABLE([eud],
+  AS_HELP_STRING([--enable-eud], [Enable building the EUD driver]),
+  [build_eud=$enableval], [build_eud=no])
+
 AC_ARG_ENABLE([rshim],
   AS_HELP_STRING([--enable-rshim], [Enable building the rshim driver]),
   [build_rshim=$enableval], [build_rshim=no])
@@ -318,6 +326,7 @@ AC_ARG_ADAPTERS([
   JTAG_VPI_ADAPTER,
   PCIE_ADAPTERS,
   LIBJAYLINK_ADAPTERS
+  QCOM_ADAPTERS
   ],[auto])
 
 AC_ARG_ENABLE([parport],
@@ -530,6 +539,12 @@ AS_IF([test "x$ADAPTER_VAR([dummy])" != "xno"], [
   build_bitbang=yes
 ])
 
+AS_IF([test "x$build_eud" = "xyes"], [
+  build_bitbang=yes
+  AC_DEFINE([BUILD_EUD], [1], [1 if you want EUD driver.])
+], [
+  AC_DEFINE([BUILD_EUD], [0], [0 if you don't want EUD driver.])
+])
 AS_IF([test "x$build_ep93xx" = "xyes"], [
   build_bitbang=yes
   AC_DEFINE([BUILD_EP93XX], [1], [1 if you want ep93xx.])
@@ -752,6 +767,15 @@ AS_IF([test "x$enable_jlink" != "xno"], [
   ])
 ])
 
+AS_IF([test "x$enable_eud" != "xno"], [
+  AS_IF([test -f "$srcdir/src/jtag/drivers/eud/configure.ac"], [
+    AX_CONFIG_SUBDIR_OPTION([src/jtag/drivers/eud], [--enable-subproject-build])
+  ], [
+    AC_MSG_ERROR([Internal eud not found, run either 'git submodule init' and 'git submodule update' or disable internal eud with --disable-internal-eud.])
+  ])
+])
+
+
 # Presto needs the bitq module
 AS_IF([test "x$enable_presto" != "xno"], [
   build_bitq=yes
@@ -793,6 +817,7 @@ AM_CONDITIONAL([HAVE_CAPSTONE], [test "x$enable_capstone" != "xno"])
 AM_CONDITIONAL([INTERNAL_JIMTCL], [test "x$use_internal_jimtcl" = "xyes"])
 AM_CONDITIONAL([HAVE_JIMTCL_PKG_CONFIG], [test "x$have_jimtcl_pkg_config" = "xyes"])
 AM_CONDITIONAL([INTERNAL_LIBJAYLINK], [test "x$use_internal_libjaylink" = "xyes"])
+AM_CONDITIONAL([EUD], [test "x$build_eud" = "xyes"])
 
 AM_CONDITIONAL([USE_GCOV], [test "x$enable_gcov" = "xyes"])
 
@@ -880,6 +905,7 @@ m4_foreach([adapter], [USB1_ADAPTERS,
 	JTAG_VPI_ADAPTER,
 	DUMMY_ADAPTER,
 	OPTIONAL_LIBRARIES,
+  QCOM_ADAPTERS
 	COVERAGE],
 	[s=m4_format(["%-41s"], ADAPTER_DESC([adapter]))
 	AS_CASE([$ADAPTER_VAR([adapter])],

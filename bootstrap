@@ -59,5 +59,12 @@ if [ -x src/jtag/drivers/libjaylink/autogen.sh ]; then
     )
 fi
 
+if [ -e src/jtag/drivers/eud/configure.ac ]; then
+    (
+    cd src/jtag/drivers/eud
+    autoreconf --verbose --force --install
+    )
+fi
+
 echo "Bootstrap complete. Quick build instructions:"
 echo "./configure ...."

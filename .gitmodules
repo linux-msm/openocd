@@ -4,3 +4,6 @@
 [submodule "src/jtag/drivers/libjaylink"]
 	path = src/jtag/drivers/libjaylink
 	url = https://gitlab.zapb.de/libjaylink/libjaylink.git
+[submodule "src/jtag/drivers/eud"]
+	path = src/jtag/drivers/eud
+	url = https://github.com/quic/eud.git

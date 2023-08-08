@@ -41,7 +41,7 @@ endif
 %C%_libopenocd_la_CPPFLAGS += $(AM_CPPFLAGS) $(CPPFLAGS)
 
 # the library search path.
-%C%_libopenocd_la_LDFLAGS = $(all_libraries)
+%C%_libopenocd_la_LDFLAGS = -static $(all_libraries)
 
 if IS_MINGW
 MINGWLDADD = -lws2_32

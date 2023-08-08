@@ -404,7 +404,7 @@ char *alloc_printf(const char *format, ...)
  *
  */
 #define KEEP_ALIVE_KICK_TIME_MS  500
-#define KEEP_ALIVE_TIMEOUT_MS   1000
+#define KEEP_ALIVE_TIMEOUT_MS   10000
 
 static void gdb_timeout_warning(int64_t delta_time)
 {

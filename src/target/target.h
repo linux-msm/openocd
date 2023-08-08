@@ -15,6 +15,9 @@
  *                                                                         *
  *   Copyright (C) ST-Ericsson SA 2011                                     *
  *   michel.jaouen@stericsson.com : smp minimum support                    *
+ *                                                                         *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   *
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 #ifndef OPENOCD_TARGET_TARGET_H
@@ -741,6 +744,9 @@ uint32_t target_get_working_area_avail(struct target *target);
 void target_quit(void);
 
 extern struct target *all_targets;
+
+/* hexagon untrusted flag*/
+extern bool is_hexagon_untrusted;
 
 uint64_t target_buffer_get_u64(struct target *target, const uint8_t *buffer);
 uint32_t target_buffer_get_u32(struct target *target, const uint8_t *buffer);

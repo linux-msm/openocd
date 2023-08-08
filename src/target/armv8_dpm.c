@@ -203,7 +203,8 @@ static int dpmv8_exec_opcode(struct arm_dpm *dpm,
 
 	if (p_dscr)
 		dscr = *p_dscr;
-
+	
+	
 	/* Wait for InstrCompl bit to be set */
 	long long then = timeval_ms();
 	while ((dscr & DSCR_ITE) == 0) {

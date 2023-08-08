@@ -68,6 +68,15 @@ endif
 if DUMMY
 DRIVERFILES += %D%/dummy.c
 endif
+
+if EUD
+DRIVERFILES += %D%/eud.c
+SUBDIRS += %D%/eud
+DIST_SUBDIRS += %D%/eud
+%C%_libocdjtagdrivers_la_LIBADD += %D%/eud/libeud.la -lstdc++ -lm
+%C%_libocdjtagdrivers_la_CPPFLAGS += -I$(srcdir)/%D%/eud/inc
+endif
+
 if FTDI
 DRIVERFILES += %D%/ftdi.c %D%/mpsse.c
 endif

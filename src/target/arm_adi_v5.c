@@ -16,6 +16,9 @@
  *   andreas.fritiofson@gmail.com                                          *
  *                                                                         *
  *   Copyright (C) 2019-2021, Ampere Computing LLC                         *
+ * 																		   *
+ *   Copyright (c) 2023 Qualcomm Innovation Center, Inc.                   *
+ *   All rights reserved.                                                  *
  ***************************************************************************/
 
 /**
@@ -770,6 +773,34 @@ void dap_invalidate_cache(struct adiv5_dap *dap)
 	}
 }
 
+int enable_dbg_sys_pwr(struct adiv5_dap *dap)
+{
+	int retval;
+	return 0;
+	
+	dap->dp_ctrl_stat = (uint32_t)(0x50000020);
+
+	retval = dap_queue_dp_write(dap, DP_CTRL_STAT, dap->dp_ctrl_stat);
+	if (retval != ERROR_OK)
+		return retval;
+
+	/* Check that we have debug power domains activated */
+	LOG_DEBUG("DAP: wait CDBGPWRUPACK");
+	retval = dap_dp_poll_register(dap, DP_CTRL_STAT,
+				  CDBGPWRUPACK, CDBGPWRUPACK,
+				  DAP_POWER_DOMAIN_TIMEOUT);
+	if (retval != ERROR_OK)
+		return retval;
+
+	retval = dap_run(dap);
+	if (retval != ERROR_OK)
+		return retval;
+
+	return retval;
+
+}
+
+
 /**
  * Initialize a DAP.  This sets up the power domains, prepares the DP
  * for further use and activates overrun checking.
@@ -1227,7 +1258,7 @@ int dap_put_ap(struct adiv5_ap *ap)
 	return ERROR_OK;
 }
 
-static int dap_get_debugbase(struct adiv5_ap *ap,
+int dap_get_debugbase(struct adiv5_ap *ap,
 			target_addr_t *dbgbase, uint32_t *apid)
 {
 	struct adiv5_dap *dap = ap->dap;
