@@ -518,7 +518,7 @@ int eud_reset(int trst, int srst)
 
 static int eud_khz(int khz, int *speed)
 {
-    // LOG_DEBUG("eud_khz \n");
+    LOG_DEBUG("eud_khz %d", khz);
     if (khz >= 0 && khz <= 1875)
         *speed = 0x6;
     else if (khz > 1875 && khz <= 3750)
@@ -692,7 +692,7 @@ static struct swd_driver eud_swd_driver =
     .trace = NULL
 };
 
-static const char *const eud_transports[] = {"swd", NULL};
+static const char *const eud_transports[] = {"swd", "jtag", NULL};
 
 struct adapter_driver eud_adapter_driver = {
     .name = "eud",
