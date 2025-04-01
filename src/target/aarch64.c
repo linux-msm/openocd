@@ -27,6 +27,7 @@
 #include <helper/nvp.h>
 #include <helper/time_support.h>
 #include "aarch64_system_registers.h"
+#include "helper/binarybuffer.h"
 
 enum restart_mode {
 	RESTART_LAZY,
@@ -207,7 +208,8 @@ static int aarch64_read_prsr(struct target *target, uint32_t *prsr)
 	if (retval != ERROR_OK)
 		return retval;
 
-	armv8->sticky_reset |= *prsr & PRSR_SR;
+	/* FIXME: this seems to happen spuriously at least on SDM845/OnePlus 6 and causes havoc! */
+	// armv8->sticky_reset |= *prsr & PRSR_SR;
 	return ERROR_OK;
 }
 
@@ -386,7 +388,7 @@ static int aarch64_halt_one(struct target *target, enum halt_mode mode)
 	int retval = ERROR_OK;
 	struct armv8_common *armv8 = target_to_armv8(target);
 
-	LOG_DEBUG("%s", target_name(target));
+	// LOG_DEBUG("%s", target_name(target));
 
 	/* allow Halting Debug Mode */
 	retval = aarch64_set_dscr_bits(target, DSCR_HDE, DSCR_HDE);
