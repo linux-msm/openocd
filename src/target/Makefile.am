@@ -29,8 +29,7 @@ noinst_LTLIBRARIES += %D%/libtarget.la
 	%D%/dsp5680xx.c \
 	%D%/hla_target.c \
 	$(ARMV8_SRC) \
-	$(MIPS64_SRC) \
-	$(HEXAGON_SRC) 
+	$(MIPS64_SRC)
 
 if HAVE_CAPSTONE
 %C%_libtarget_la_CPPFLAGS += $(CAPSTONE_CFLAGS)
@@ -155,8 +154,8 @@ ARC_SRC = \
         %D%/arc_jtag.c \
         %D%/arc_mem.c
 
-HEXAGON_SRC = \
-        %D%/hexagon.c 
+#HEXAGON_SRC = \
+#        %D%/hexagon.c 
 		
 %C%_libtarget_la_SOURCES += \
 	%D%/algorithm.h \

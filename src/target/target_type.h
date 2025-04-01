@@ -312,7 +312,7 @@ struct target_type {
 };
 
 extern struct target_type aarch64_target;
-extern struct target_type hexagon_target;
+// extern struct target_type hexagon_target;
 extern struct target_type arcv2_target;
 extern struct target_type arm11_target;
 extern struct target_type arm720t_target;
