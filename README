@@ -1,3 +1,55 @@
+# Qualcomm EUD quickstart
+
+1. `git clone https://github.com/linux-msm/openocd`
+2. `git submodule update --init`
+3. `./bootstrap`
+4. `./configure --enable-eud --disable-linuxgpiod`
+5. `make -j$(nproc --all)`
+
+Then launch openocd with
+
+```sh
+./src/openocd -d -f tcl/interface/eud.cfg -f tcl/target/qualcomm/qcs6490.cfg
+```
+
+Even though the config is named qcs6490, it doesn't seem to be soc specific.
+
+Open gdb and run `target extended-remote :3333` to connect.
+
+## Enabling EUD on device
+
+For SDM845 this is ~easy, apply the following diff to U-Boot:
+
+```diff
+diff --git a/cmd/fastboot.c b/cmd/fastboot.c
+index d4cfc0c7a282..9b397490d594 100644
+--- a/cmd/fastboot.c
++++ b/cmd/fastboot.c
+@@ -108,8 +108,10 @@ static int do_fastboot_usb(int argc, char *const argv[],
+ 	}
+ 
+ 	ret = CMD_RET_SUCCESS;
+ 
++	return 0;
++
+ exit:
+ 	udc_device_put(udc);
+ 	g_dnl_unregister();
+ 	g_dnl_clear_detach();
+```
+
+Then at the U-Boot prompt run
+
+```sh
+=> mw.l 0x88e1014 1
+=> run fastboot
+```
+
+You can then ctrl+c to exit fastboot back to the prompt. EUD should now be up!
+
+Currently openocd segfaults when booting the kernel, likely due to other CPU
+cores being bought up or Linux configuring the USB interface.
+
 # Welcome to OpenOCD!
 
 OpenOCD provides on-chip programming and debugging support with a
