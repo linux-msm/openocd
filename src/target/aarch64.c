@@ -1933,7 +1933,7 @@ static int aarch64_enable_reset_catch(struct target *target, bool enable)
 			armv8->debug_base + CPUV8_DBG_EDECR, edecr);
 }
 
-static int aarch64_clear_reset_catch(struct target *target)
+static int __attribute((unused)) aarch64_clear_reset_catch(struct target *target)
 {
 	struct armv8_common *armv8 = target_to_armv8(target);
 	uint32_t edesr;
