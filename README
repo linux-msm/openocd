@@ -47,8 +47,7 @@ Then at the U-Boot prompt run
 
 You can then ctrl+c to exit fastboot back to the prompt. EUD should now be up!
 
-Currently openocd segfaults when booting the kernel, likely due to other CPU
-cores being bought up or Linux configuring the USB interface.
+It is then possible to boot Linux with `maxcpus=1`.
 
 # Welcome to OpenOCD!
 
