@@ -68,7 +68,7 @@ static uint32_t gDeviceId = 0;
 
 static uint32_t cmd_count = 0;
 uint32_t dummy_read;
-uint32_t periodic_seq_timeout = 3500;
+uint64_t periodic_seq_timeout = 3500;
 bool is_pwrupNeeded = false;
 
 #define CTRLSTAT_CHECK_ENABLED 1
@@ -158,7 +158,7 @@ static int eud_swd_run(void)
 
     if (err == SWD_ERR_SWD_ACK_FAULT_DETECTED)
     {
-        err = handle_SwdAckFault(0, 0, 0, true); // dummy params ok for QUTS
+        err = handle_SwdAckFault(0, 0, NULL, true); // dummy params ok for QUTS
     }
 
     if (err != EUD_SUCCESS)
@@ -169,12 +169,12 @@ static int eud_swd_run(void)
     return err;
 }
 
-static inline void write_abort_1f()
+static inline void write_abort_1f(void)
 {
     eudWriteWrapper(0, 0, 0x1f); // abort write 0x1f
 }
 
-static inline void write_abort_4()
+static inline void write_abort_4(void)
 {
     eudWriteWrapper(0, 0, 0x4); // abort write 0x4
 }
@@ -199,13 +199,12 @@ static void trigger_pwr_on_sequence(void)
         LOG_ERROR("CTRLSTAT Write in triggger sequence FAILED!! %x", err);
     }
 
-    return EUD_SUCCESS;
+    return;
 }
 
 static void eud_ensure_dbg_sys_pwr_is_on(void)
 {
-    static int call_count = 0, call_count2 = 0;
-    EUD_ERR_t err = EUD_SUCCESS;
+    static int call_count = 0;
 
     if (call_count > 500)
     {
@@ -227,6 +226,10 @@ static EUD_ERR_t handle_SwdAckFault(uint32_t APnDP, uint32_t A2_3, uint32_t *val
 {
 
     EUD_ERR_t err = EUD_SUCCESS;
+    uint32_t _val;
+
+    if (value)
+        _val = *value;
 
     // retry scenario
     write_abort_1f();
@@ -234,20 +237,23 @@ static EUD_ERR_t handle_SwdAckFault(uint32_t APnDP, uint32_t A2_3, uint32_t *val
     if (RnW) // Read case
     {
         LOG_DEBUG("Entered read ack fault");
-        err = eudReadWrapper(APnDP, A2_3, &value);
+        err = eudReadWrapper(APnDP, A2_3, &_val);
     }
     else // write case
     {
         LOG_DEBUG("Entered write ack fault");
-        err = eudWriteWrapper(APnDP, A2_3, *value);
+        err = eudWriteWrapper(APnDP, A2_3, _val);
     }
+
+    if (value)
+        *value = _val;
 
     return err;
 }
 
-static inline void triggerPeriodicSequence()
+static inline void triggerPeriodicSequence(void)
 {
-    if ((periodic_seq_timeout == 0) )
+    if (periodic_seq_timeout == 0)
     {
         write_abort_4();
         trigger_pwr_on_sequence();
@@ -575,7 +581,7 @@ static int eud_khz(int khz, int *speed)
     // return ERROR_OK;
 }
 
-#if EUD_SPEED_DIV
+#ifdef EUD_SPEED_DIV
 static int eud_speed_div(int speed, int *khz)
 {
 	if (speed == 0)
@@ -644,7 +650,7 @@ static int eud_swd_init(void)
 COMMAND_HANDLER(eud_trigger_seq)
 {
     COMMAND_PARSE_ADDRESS(CMD_ARGV[0], periodic_seq_timeout);
-	LOG_INFO("periodic_seq_timeout = 0x%d ", periodic_seq_timeout);
+	LOG_INFO("periodic_seq_timeout = 0x%lx ", periodic_seq_timeout);
 	return ERROR_OK;
 }
 
