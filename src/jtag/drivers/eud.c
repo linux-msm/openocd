@@ -415,8 +415,8 @@ int eud_AssertReset(void)
         SWD_BITBANG_RCTLR_SRST_BMSK_ASSERT + // this is the reset value
         SWD_BITBANG_GPIO_DI_OE_DEASSERT +
         SWD_BITBANG_GPIO_SRST_BMSK_DEASSERT +
-        SWD_BITBANG_GPIO_TRST_BMSK_DEASSERT +
-        SWD_BITBANG_DAP_TRST_BMSK_ASSERT; // Also reset TAP
+        SWD_BITBANG_GPIO_TRST_BMSK_DEASSERT;/* +
+        SWD_BITBANG_DAP_TRST_BMSK_ASSERT; // Also reset TAP */
 
     LOG_DEBUG("OCD: Bitbang eud_AssertReset wrapper call val: %" PRIu32 " \n", swd_bitbang_value);
     err = eudBitBangWrapper(swd_bitbang_value, &return_val);
@@ -429,8 +429,8 @@ int eud_AssertReset(void)
         SWD_BITBANG_RCTLR_SRST_BMSK_ASSERT + // this is the reset value
         SWD_BITBANG_GPIO_DI_OE_DEASSERT +
         SWD_BITBANG_GPIO_SRST_BMSK_DEASSERT +
-        SWD_BITBANG_GPIO_TRST_BMSK_DEASSERT +
-        SWD_BITBANG_DAP_TRST_BMSK_DEASSERT; // Deassert TAP reset
+        SWD_BITBANG_GPIO_TRST_BMSK_DEASSERT;/* +
+        SWD_BITBANG_DAP_TRST_BMSK_DEASSERT; // Deassert TAP reset */
 
     LOG_DEBUG("OCD: Bitbang eud_AssertReset wrapper call val: %" PRIu32 " \n", swd_bitbang_value);
     err = eudBitBangWrapper(swd_bitbang_value, &return_val);
@@ -483,34 +483,40 @@ int eud_DeAssertReset(void)
 
 int eud_reset(int trst, int srst)
 {
-    LOG_DEBUG("eud_reset call \n");
     int retval = EUD_SUCCESS;
 
     if (srst == 1)
-    {
-        retval = eud_AssertReset();
-
-        if (retval)
-        {
-            printf("libeud_reset call libusb_AssertReset, error code %x\n", retval);
-            return retval;
-        }
-
-        printf("libeud_reset call libusb_AssertReset successfully\n");
-    }
+        retval = eud_msm_assert_reset(gDeviceId);
     else
-    {
+        retval = eud_msm_deassert_reset(gDeviceId);
 
-        retval = eud_DeAssertReset();
+    LOG_INFO("eud_reset %d ret %d", srst, retval);
 
-        if (retval)
-        {
-            printf("libeud_reset call libusb_DeAssertReset, error code %x\n", retval);
-            return retval;
-        }
+    // if (srst == 1)
+    // {
+    //     retval = eud_AssertReset();
 
-        printf("libeud_reset call libusb_DeAssertReset successfully\n");
-    }
+    //     if (retval)
+    //     {
+    //         printf("libeud_reset call libusb_AssertReset, error code %x\n", retval);
+    //         return retval;
+    //     }
+
+    //     printf("libeud_reset call libusb_AssertReset successfully\n");
+    // }
+    // else
+    // {
+
+    //     retval = eud_DeAssertReset();
+
+    //     if (retval)
+    //     {
+    //         printf("libeud_reset call libusb_DeAssertReset, error code %x\n", retval);
+    //         return retval;
+    //     }
+
+    //     printf("libeud_reset call libusb_DeAssertReset successfully\n");
+    // }
 
     return retval;
 }
